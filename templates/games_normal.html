@@ -1,0 +1,445 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Minitracker {{ game_name }} Stats</title>
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+  <script src="https://code.highcharts.com/modules/exporting.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet" />
+  <style>
+    /* Reset and basics */
+    body {
+      margin: 0;
+      font-family: 'Roboto Mono', monospace;
+      background-color: #121212;
+      color: #ddd;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+      gap: 20px;
+      min-height: 100vh;
+      user-select: none;
+    }
+
+    header {
+      width: 100%;
+      max-width: 1600px;
+      padding: 20px 0;
+      border-bottom: 2px solid #333;
+      text-align: center;
+    }
+
+    header h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 2rem;
+      color: #eee;
+    }
+
+    .buttons {
+      display: flex;
+      gap: 12px;
+      width: 100%;
+      max-width: 1200px;
+      justify-content: center;
+      margin-bottom: 12px;
+    }
+
+    button {
+      background: #222;
+      border: 1px solid #555;
+      color: #ddd;
+      padding: 10px 20px;
+      font-weight: 600;
+      font-size: 1rem;
+      cursor: pointer;
+      border-radius: 4px;
+      transition: background-color 0.2s ease;
+      user-select: none;
+    }
+
+    button:hover {
+      background: #333;
+      border-color: #888;
+    }
+
+    /* Container for metadata and live stats side by side */
+    .info-live-container {
+      display: flex;
+      width: 70vw;
+      max-width: 1200px;
+      gap: 40px;
+      box-sizing: border-box;
+      justify-content: center;
+      flex-wrap: wrap;
+    }
+
+    /* Metadata box */
+    .metadata-box, .live-stats-box {
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      box-sizing: border-box;
+      flex: 1 1 45%;
+      min-width: 320px;
+      user-select: text;
+    }
+
+    .metadata-box h2,
+    .live-stats-box h2,
+    .description-box h2 {
+      margin-top: 0;
+      color: #eee;
+      font-weight: 700;
+      font-size: 1.6rem;
+      border-bottom: 1px solid #333;
+      padding-bottom: 6px;
+      margin-bottom: 16px;
+    }
+
+    /* Stat rows */
+    .stat {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 14px;
+    }
+
+    .stat-label {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: #bbb;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      white-space: nowrap;
+    }
+
+    .stat-value {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #eee;
+      text-align: right;
+      cursor: default;
+    }
+
+    /* Description box separate and full width */
+    .description-box {
+      width: 70vw;
+      max-width: 1600px;
+      background: #1c1c1c;
+      padding: 20px;
+      border-radius: 6px;
+      border: 1px solid #333;
+      box-sizing: border-box;
+      user-select: text;
+    }
+
+    .description-text {
+      font-weight: normal;
+      font-size: 1rem;
+      color: #ccc;
+      white-space: pre-wrap;
+      line-height: 1.4;
+    }
+
+    /* Charts grid */
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 30px;
+      width: 70vw;
+      max-width: 1600px;
+      box-sizing: border-box;
+    }
+
+    .chart-container {
+      background: #1c1c1c;
+      border-radius: 6px;
+      padding: 8px 12px;
+      height: 450px;
+      border: 1px solid #333;
+      box-sizing: border-box;
+      width: 100%;
+    }
+
+    /* Responsive */
+    @media (max-width: 960px) {
+      .info-live-container {
+        flex-direction: column;
+        width: 90vw;
+      }
+      .metadata-box, .live-stats-box, .description-box {
+        flex: none;
+        width: 100%;
+        min-width: unset;
+      }
+      .grid {
+        grid-template-columns: 1fr;
+        width: 90vw;
+      }
+      .chart-container {
+        height: 360px;
+      }
+      header h1 {
+        font-size: 1.7rem;
+      }
+      button {
+        font-size: 0.9rem;
+        padding: 8px 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>{{ game_name }}</h1>
+  </header>
+
+  <div class="buttons">
+    <button onclick="window.location.href='index.html';" aria-label="Back to Home">Back to Home</button>
+    <button onclick="goToDaily()" aria-label="View Daily Stats">Daily</button>
+    <button onclick="goToBadgesSimple()">View Badges</button>
+  </div>
+
+  <div class="info-live-container" aria-label="Game information and live statistics">
+    <!-- Metadata Box -->
+    <section class="metadata-box" aria-label="Game Metadata">
+      <h2>Game Info</h2>
+
+      <div class="stat">
+        <div class="stat-label">Genre</div>
+        <div class="stat-value">{{ genre }}</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">Creator</div>
+        <div class="stat-value">{{ creator }}</div>
+      </div>
+
+      <div class="stat">
+        <div class="stat-label">Max Players</div>
+        <div class="stat-value">{{ max_players }}</div>
+      </div>
+
+      <div class="stat" title="{{ created }}" id="created-stat">
+        <div class="stat-label">Created</div>
+        <div class="stat-value">{{ created }}</div>
+      </div>
+
+      <div class="stat" title="{{ updated }}" id="updated-stat">
+        <div class="stat-label">Updated</div>
+        <div class="stat-value">{{ updated }}</div>
+      </div>
+
+      {% if price and price|int > 0 %}
+      <div class="stat">
+        <div class="stat-label">Price</div>
+        <div class="stat-value">{{ price }}</div>
+      </div>
+      {% endif %}
+    </section>
+
+    <!-- Live Stats Box -->
+    <section class="live-stats-box" aria-label="Live Game Statistics">
+      <h2>Live Stats</h2>
+
+      <div class="stat" aria-label="Playing count">
+        <div class="stat-label">Playing</div>
+        <div class="stat-value">{{ "{:,}".format(playing_current) }}</div>
+      </div>
+
+      <div class="stat" aria-label="Visits count">
+        <div class="stat-label">Visits</div>
+        <div class="stat-value">{{ "{:,}".format(visits_current) }}</div>
+      </div>
+
+      <div class="stat" aria-label="Favorites count">
+        <div class="stat-label">Favorites</div>
+        <div class="stat-value">{{ "{:,}".format(favorited_current) }}</div>
+      </div>
+
+      <div class="stat" aria-label="Upvote percentage">
+        <div class="stat-label">Upvote %</div>
+        <div class="stat-value">{{ upvotes_pct_current }}%</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Description separate -->
+  <section class="description-box" aria-label="Game Description">
+    <h2>Description</h2>
+    <div class="description-text">{{ description }}</div>
+  </section>
+
+  <!-- Charts -->
+  <div class="grid" aria-label="Charts showing game statistics trends">
+    <div id="playing-chart" class="chart-container"></div>
+    <div id="visits-chart" class="chart-container"></div>
+    <div id="visitschange-chart" class="chart-container"></div>
+    <div id="favorites-chart" class="chart-container"></div>
+    <div id="favoritedchange-chart" class="chart-container"></div>
+    <div id="upvotesdownvotes-chart" class="chart-container"></div>
+    <div id="voteschange-chart" class="chart-container"></div>
+    <div id="upvotespercentage-chart" class="chart-container"></div>
+  </div>
+
+  <script>
+    function goToDaily() {
+      const currentFilename = window.location.pathname.split('/').pop();
+      window.location.href = `daily_${currentFilename}`;
+    }
+
+    function goToBadgesSimple() {
+      const currentFilename = window.location.pathname.split('/').pop(); // "123456.html"
+      const universeId = currentFilename.replace('.html', '');           // "123456"
+      const badgePath = `./${universeId}/index.html`;                    // "./123456/index.html"
+      window.location.href = badgePath;
+    }
+
+    // Format elapsed time since last update in a readable way
+    function formatElapsedTime(date) {
+      const now = new Date();
+      const diffMs = now - date;
+      if (diffMs < 1000) return 'Just now';
+
+      const seconds = Math.floor(diffMs / 1000);
+      if (seconds < 60) return seconds + ' seconds ago';
+
+      const minutes = Math.floor(seconds / 60);
+      if (minutes < 60) return minutes + ' minutes ago';
+
+      const hours = Math.floor(minutes / 60);
+      if (hours < 24) return hours + ' hours ago';
+
+      const days = Math.floor(hours / 24);
+      return days + ' days ago';
+    }
+
+    // On page load, set tooltip for created and last updated,
+    // and update last updated text with elapsed time.
+    document.addEventListener("DOMContentLoaded", function () {
+      // Assume these date strings are passed from backend in ISO format:
+      const createdFull = "{{ created_full }}";    // e.g. 2023-01-15T14:32:00Z
+      const updatedFull = "{{ updated_full }}";    // e.g. 2025-08-04T18:25:00Z
+
+      // Set the full date tooltip for created (already set in HTML title attr)
+      const createdStat = document.getElementById("created-stat");
+      if (createdStat) {
+        createdStat.setAttribute("title", createdFull);
+      }
+
+      // Calculate and show elapsed time for last updated
+      const updatedStat = document.getElementById("updated-stat");
+      const updatedValue = document.getElementById("updated-value");
+      if (updatedStat && updatedValue && updatedFull) {
+        const updatedDate = new Date(updatedFull);
+        updatedValue.textContent = formatElapsedTime(updatedDate);
+        updatedStat.setAttribute("title", updatedFull);
+      }
+
+      // Initialize charts as before
+      const chartOptions = {
+        chart: {
+          type: 'line',
+          zoomType: 'x',
+          backgroundColor: '#121212',
+          style: { fontFamily: "'Roboto Mono', monospace" },
+        },
+        title: { style: { color: '#ddd', fontWeight: '700' } },
+        xAxis: {
+          categories: {{ timestamps }},
+          labels: { style: { color: '#ddd' } },
+          lineColor: '#555',
+          tickColor: '#555',
+        },
+        yAxis: {
+          title: { style: { color: '#ddd', fontWeight: '600' } },
+          labels: { style: { color: '#ddd' } },
+          gridLineColor: '#333',
+        },
+        legend: { itemStyle: { color: '#bbb', fontWeight: '600' } },
+        tooltip: {
+          shared: true,
+          crosshairs: true,
+          backgroundColor: '#222',
+          style: { color: '#ddd' },
+          borderRadius: 4,
+          borderWidth: 0
+        },
+        credits: { enabled: false },
+        exporting: { enabled: true },
+      };
+
+      Highcharts.chart('playing-chart', {
+        ...chartOptions,
+        title: { text: 'Playing' },
+        yAxis: {
+          ...chartOptions.yAxis,
+          min: 0 // Force Y-axis to start at 0
+        },
+        series: [{ name: 'Playing', data: {{ playing }} }],
+        colors: ['#4caf50']
+      });
+
+      Highcharts.chart('visits-chart', {
+        ...chartOptions,
+        title: { text: 'Visits' },
+        series: [{ name: 'Visits', data: {{ visits }} }],
+        colors: ['#2196f3']
+      });
+
+      Highcharts.chart('visitschange-chart', {
+        ...chartOptions,
+        chart: { ...chartOptions.chart, type: 'column' },
+        title: { text: 'Visits Change' },
+        series: [{ name: 'Visits Change', data: {{ visitschange }} }],
+        colors: ['#1976d2']
+      });
+
+      Highcharts.chart('favorites-chart', {
+        ...chartOptions,
+        title: { text: 'Favorites' },
+        series: [{ name: 'Favorites', data: {{ favoritedCount }} }],
+        colors: ['#4caf50']
+      });
+
+      Highcharts.chart('favoritedchange-chart', {
+        ...chartOptions,
+        chart: { ...chartOptions.chart, type: 'column' },
+        title: { text: 'Favorites Change' },
+        series: [{ name: 'Favorites Change', data: {{ favoritedchange }} }],
+        colors: ['#388e3c']
+      });
+
+      Highcharts.chart('upvotesdownvotes-chart', {
+        ...chartOptions,
+        title: { text: 'Votes' },
+        series: [
+          { name: 'Upvotes', data: {{ upVotes }}, color: '#4caf50' },
+          { name: 'Downvotes', data: {{ downVotes }}, color: '#d32f2f' }
+        ]
+      });
+
+      Highcharts.chart('voteschange-chart', {
+        ...chartOptions,
+        chart: { ...chartOptions.chart, type: 'column' },
+        title: { text: 'Votes Change' },
+        series: [
+          { name: 'Upvotes Change', data: {{ upVoteschange }}, color: '#81c784' },
+          { name: 'Downvotes Change', data: {{ downVoteschange }}, color: '#e57373' }
+        ]
+      });
+
+      Highcharts.chart('upvotespercentage-chart', {
+        ...chartOptions,
+        title: { text: 'Upvotes Percentage' },
+        tooltip: { pointFormat: '{series.name}: <b>{point.y:.2f}%</b>' },
+        series: [{ name: 'Upvotes %', data: {{ upVotespercentage }}, color: '#4caf50' }],
+      });
+    });
+  </script>
+</body>
+</html>

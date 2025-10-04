@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Version History - Game Tracker</title>
+  <style>
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #121212;
+      color: #eee;
+      margin: 0;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-height: 100vh;
+    }
+    header {
+      width: 100%;
+      max-width: 1000px;
+      text-align: center;
+      padding-bottom: 10px;
+      border-bottom: 2px solid #444;
+    }
+    header h1 {
+      margin: 0;
+      font-weight: 700;
+      font-size: 2.5rem;
+      letter-spacing: 0.05em;
+      color: #4caf50;
+    }
+    .content {
+      max-width: 1000px;
+      width: 100%;
+      margin-top: 20px;
+    }
+    h2 {
+      color: #81c784;
+    }
+    .version-list {
+      background: #1e1e1e;
+      border-radius: 6px;
+      padding: 20px;
+      margin-bottom: 40px;
+      box-shadow: 0 0 10px rgba(76, 175, 80, 0.5);
+    }
+    .version-item {
+      margin-bottom: 15px;
+      border-bottom: 1px solid #333;
+      padding-bottom: 10px;
+    }
+    .version-item:last-child {
+      border-bottom: none;
+    }
+    .version-number {
+      font-weight: 700;
+      font-size: 1.2rem;
+      color: #4caf50;
+    }
+    .version-date {
+      font-style: italic;
+      color: #999;
+      font-size: 0.9rem;
+    }
+    .version-desc {
+      margin-top: 5px;
+      color: #ccc;
+      line-height: 1.3;
+    }
+	.version-div {
+      margin-top: 5px;
+      color: #ccc;
+      line-height: 1.3;
+	  font-size: 1.5rem;
+    }
+    #chart-container {
+      height: 400px;
+      background: #1e1e1e;
+      border-radius: 6px;
+      padding: 15px;
+      box-shadow: 0 0 15px rgba(76, 175, 80, 0.6);
+    }
+  </style>
+  <!-- Highcharts CDN -->
+  <script src="https://code.highcharts.com/highcharts.js"></script>
+</head>
+<body>
+
+  <header>
+    <h1>Minitacker Version History</h1>
+  </header>
+
+  <div class="content">
+
+    <section class="version-list" aria-label="List of versions">
+      <h2>Versions</h2>
+	  
+      <div class="version-item">
+        <div class="version-number">v4.0.0</div>
+        <div class="version-date">2025-08-08</div>
+		<div class="version-div">Addations:</div>
+		<div class="version-desc">Added Badges page</div>
+		<div class="version-desc">Added Badges tracking and lists pages</div>
+		<div class="version-desc">Added more fields to be saved</div>
+		<div class="version-desc">Game info tab created. Now shows Genre, Creator, Max Players, Creation Date, and Update date and time</div>
+		<div class="version-desc">Added Description Tab in games "personal page"</div>
+		<div class="version-div">Changes:</div>
+		<div class="version-desc">Completely reworked file layouts</div>
+		<div class="version-desc">Reworked file storing (csv to json :D)</div>
+		<div class="version-desc">Finally used game descriptions</div>
+		<div class="version-div">Backend:</div>
+		<div class="version-desc">Added add games page to more easially add games to the config</div>
+      </div>
+
+      <div class="version-item">
+        <div class="version-number">v3.0.1</div>
+        <div class="version-date">2025-07-23</div>
+        <div class="version-desc">Changed Tooltip so it will show the row that corrisponds to the X axis of the mouse</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v3.0.0</div>
+        <div class="version-date">2025-06-02</div>
+        <div class="version-desc">Complete reskin of the website along with bug fixes :D</div>
+		<div class="version-div">Addations:</div>
+		<div class="version-desc">Added "Live Stats" to the 10-min game stats page</div>
+		<div class="version-desc">Added "Daily Summary" to the daily page that shows peak player counts and other stuff</div>
+		<div class="version-desc">Added Search bar back along with the menu bars</div>
+		<div class="version-desc">Added description to games (not used currently but there for later)</div>
+		<div class="version-desc">Added Fullscreen to charts</div>
+		<div class="version-desc">Added version history (this page) which means yes, the stuff below is named off my memory and not documented anywhere lol</div>
+		<div class="version-div">Changes:</div>
+		<div class="version-desc">Game table is now the main screen with the search and buttons tied to the top instead of being in its own box</div>
+		<div class="version-div">Bug Fixes:</div>
+		<div class="version-desc">Fixed daily script updating the home page</div>
+		<div class="version-desc">Fixed update_daily_html.py using template.html instead of daily_template.html as template</div>
+		<div class="version-desc">Fixed the lack of search bar and menu buttons (went missing many versions ago for some reason)</div>
+		<div class="version-desc">Fixed like count and favorite count never displaying a number</div>
+		<div class="version-desc">Fixed daily page letting you keep clicking daily instead of bringing you back to the 10-min data.</div>
+		<div class="version-desc">Game pages now actually give the games name</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v2.4.1</div>
+        <div class="version-date">2025-05</div>
+        <div class="version-desc">Attempt to fix the duplicate rows in the daily script again (I swear this has to work now)</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v2.4.0</div>
+        <div class="version-date">2025-05</div>
+        <div class="version-desc">Reskin AGAIN to a "fruiger areo" theme (now lost)</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v2.3.0</div>
+        <div class="version-date">2025-05</div>
+        <div class="version-desc">Reskin of website again to something cleaner</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v2.2.0</div>
+        <div class="version-date">2025-05</div>
+        <div class="version-desc">Added script that will remove duplicate rows (daily script finally fixed??)</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v2.1.2</div>
+        <div class="version-date">2025-05</div>
+        <div class="version-desc">Tried fixing daily script again (now only runs twice)</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v2.1.1</div>
+        <div class="version-date">2025-03</div>
+        <div class="version-desc">first attempt at fixing the daily script running 8 times (kinda worked but now it just runs random amounts)</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v2.1.0</div>
+        <div class="version-date">2025-02</div>
+        <div class="version-desc">Reskin the website so it looks way better</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v2.0.0</div>
+        <div class="version-date">2025-02</div>
+        <div class="version-desc">Made proper home page and brought back search (it randomly stopped existing at some point)</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+	  
+      <div class="version-item">
+        <div class="version-number">v1.1.0</div>
+        <div class="version-date">2025-01</div>
+        <div class="version-desc">Small reskin of website along with search</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+
+      <div class="version-item">
+        <div class="version-number">v1.0.0</div>
+        <div class="version-date">2025-01-18</div>
+        <div class="version-desc">Added home page. Its now okay enough to be a full release</div>
+      </div>
+
+      <div class="version-item">
+        <div class="version-number">v0.2.0</div>
+        <div class="version-date">2025-01</div>
+        <div class="version-desc">Now added daily tracking as a seperate page.</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+
+      <div class="version-item">
+        <div class="version-number">v0.1.0</div>
+        <div class="version-date">2025-01</div>
+        <div class="version-desc">Inital version of minitracker with a very basic one game tracking system</div>
+		<div class="version-desc">version date is estimated</div>
+      </div>
+    </section>
+
+    <section aria-label="Games tracked over time chart">
+      <h2>Games Tracked Over Time</h2>
+
+      <div id="chart-container"></div>
+    </section>
+
+  </div>
+
+  <script>
+    // Sample data: array of [timestamp_in_ms, games_count]
+    // Replace this with your actual data, ideally generated dynamically by Python or another backend
+    const trackingData = [
+		[Date.UTC(2025, 0, 18), 24],
+		[Date.UTC(2025, 0, 29), 51],
+		[Date.UTC(2025, 2, 5), 55],
+		[Date.UTC(2025, 3, 20), 60],
+		[Date.UTC(2025, 3, 21), 50],
+		[Date.UTC(2025, 4, 1), 50],
+		[Date.UTC(2025, 4, 2), 52],
+		[Date.UTC(2025, 5, 25), 52],
+		[Date.UTC(2025, 5, 26), 67],
+		[Date.UTC(2025, 5, 27), 76],
+		[Date.UTC(2025, 5, 28), 77],
+		[Date.UTC(2025, 6, 16), 79],
+		[Date.UTC(2025, 6, 23), 92],
+		[Date.UTC(2025, 6, 24), 125],
+		[Date.UTC(2025, 7, 26), 181],
+    ];
+
+    Highcharts.chart('chart-container', {
+      chart: {
+        type: 'line',
+        backgroundColor: '#1e1e1e',
+        style: {
+          fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
+          color: '#eee',
+        }
+      },
+      title: {
+        text: null
+      },
+      xAxis: {
+        type: 'datetime',
+        title: {
+          text: 'Date',
+          style: { color: '#ccc' }
+        },
+        labels: {
+          style: { color: '#ccc' },
+          format: '{value:%b %e, %Y}'
+        },
+        gridLineColor: '#333',
+      },
+      yAxis: {
+        title: {
+          text: 'Games Tracked',
+          style: { color: '#ccc' }
+        },
+        labels: {
+          style: { color: '#ccc' }
+        },
+        min: 0,
+        allowDecimals: false,
+        gridLineColor: '#333',
+      },
+      series: [{
+        name: 'Games Tracked',
+        data: trackingData,
+        color: '#4caf50',
+        marker: {
+          enabled: true,
+          radius: 5,
+          fillColor: '#81c784'
+        },
+        lineWidth: 3,
+        connectNulls: false
+      }],
+      tooltip: {
+        xDateFormat: '%b %e, %Y',
+        shared: true,
+        backgroundColor: '#333',
+        style: { color: '#eee' }
+      },
+      credits: { enabled: false },
+      legend: { enabled: false },
+      plotOptions: {
+        line: {
+          marker: {
+            symbol: 'circle'
+          }
+        }
+      }
+    });
+  </script>
+
+</body>
+</html>
