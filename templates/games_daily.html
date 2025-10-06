@@ -325,7 +325,7 @@
       Highcharts.chart('upvotespercentage-chart', {
         ...chartOptions,
         title: { text: 'Upvotes Percentage' },
-        tooltip: { pointFormat: '{series.name}: <b>{point.y:.2f}%</b>' },
+        tooltip: { pointFormat: '{series.name}: <b>{point.y:.4f}%</b>' },
         series: [{ name: 'Upvotes %', data: {{ upVotespercentage }}, color: '#4caf50' }],
       });
     });
