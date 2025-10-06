@@ -325,10 +325,14 @@ function renderCharts(games, targetId="tab-content"){
     target.innerHTML="";
     if(!games.length || !games[0].history?.length){ target.innerHTML="<p>No history data available</p>"; return; }
 
-    function parseDate(ts){
-        // ensure JS Date object; your timestamps are "YYYY-MM-DD HH:MM:SS"
-        return new Date(ts.replace(' ', 'T')).getTime();
-    }
+	function parseDate(ts) {
+	  const d = new Date(ts.replace(' ', 'T'));
+	  d.setSeconds(0, 0);
+	  const mins = d.getMinutes();
+	  const rounded = Math.floor(mins / 10) * 10;
+	  d.setMinutes(rounded);
+	  return d.getTime();
+	}
 
 	function makeChart(title, seriesData, type='line', folderType='normal'){
 		const div = document.createElement("div");
@@ -513,3 +517,4 @@ showHomePage();
 </script>
 </body>
 </html>
+
