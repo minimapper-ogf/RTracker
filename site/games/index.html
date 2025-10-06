@@ -320,155 +320,131 @@ function toggleMode(universeId, currentMode){
 
 // -------------------- RENDER CHARTS --------------------
 function renderCharts(games, targetId="tab-content"){
-  const target = document.getElementById(targetId);
-  if(!target){ console.warn("Target element missing for charts"); return; }
-  target.innerHTML="";
-  if(!games.length || !games[0].history?.length){ target.innerHTML="<p>No history data available</p>"; return; }
+    const target = document.getElementById(targetId);
+    if(!target){ console.warn("Target element missing for charts"); return; }
+    target.innerHTML="";
+    if(!games.length || !games[0].history?.length){ target.innerHTML="<p>No history data available</p>"; return; }
 
-  function parseDate(ts) {
-    const d = new Date(ts.replace(' ', 'T'));
-    d.setSeconds(0, 0);
-    const mins = d.getMinutes();
-    const rounded = Math.floor(mins / 10) * 10;
-    d.setMinutes(rounded);
-    return d.getTime();
-  }
+	function parseDate(ts) {
+	  const d = new Date(ts.replace(' ', 'T'));
+	  d.setSeconds(0, 0);
+	  const mins = d.getMinutes();
+	  const rounded = Math.floor(mins / 10) * 10;
+	  d.setMinutes(rounded);
+	  return d.getTime();
+	}
 
-  // builds a complete 10-min interval array across all games
-  function buildFullTimeline() {
-    const all = [...new Set(games.flatMap(g => g.history.map(h => parseDate(h.timestamp))))].sort((a,b)=>a-b);
-    const filled = [];
-    if (all.length) {
-      let t = all[0];
-      const end = all[all.length-1];
-      const step = 10*60*1000;
-      while (t <= end) { filled.push(t); t += step; }
-    }
-    return filled;
-  }
+	function makeChart(title, seriesData, type='line', folderType='normal'){
+		const div = document.createElement("div");
+		div.className = "chart-container";
+		target.appendChild(div);
 
-  const fullTimeline = buildFullTimeline();
+		// Define range selector buttons based on mode
+		const isDaily = folderType === 'daily';
+		const rangeButtons = isDaily ? [
+			{ type: 'all', text: 'All' },
+			{ type: 'year', count: 1, text: '1y' },
+			{ type: 'ytd', text: 'YTD' },
+			{ type: 'month', count: 6, text: '6m' },
+			{ type: 'month', count: 3, text: '3m' },
+			{ type: 'month', count: 1, text: '1m' },
+		] : [
+			{ type: 'all', text: 'All' },
+			{ type: 'day', count: 7, text: '1w' },
+			{ type: 'day', count: 3, text: '3d' },
+			{ type: 'day', count: 1, text: '1d' },
+		];
 
-  function makeChart(title, seriesData, type='line', folderType='normal'){
-    const div = document.createElement("div");
-    div.className = "chart-container";
-    target.appendChild(div);
+		Highcharts.stockChart(div, {
+			chart: {
+				type: type,
+				backgroundColor: '#1e1e1e',
+				zooming: { type: 'x' },
+			},
+			title: { text: title, style: { color: '#fff' } },
+			xAxis: {
+				type: 'datetime',
+				labels: { style: { color: '#aaa' } },
+				crosshair: true // makes a vertical line follow the mouse
+			},
+			yAxis: {
+				title: { text: title, style: { color: '#aaa' } },
+				labels: { style: { color: '#aaa' } },
+				gridLineColor: 'rgba(255,255,255,0.05)'
+			},
+			legend: { itemStyle: { color: '#ddd' } },
+			tooltip: {
+				shared: true,      // show tooltip for all series at nearest X
+				split: false,      // single tooltip box
+				snap: 20,          // allow hovering near point
+				valueDecimals: 0,
+				xDateFormat: '%Y-%m-%d %H:%M'
+			},
+			rangeSelector: {
+				buttons: rangeButtons,
+				selected: 0,
+				inputEnabled: false,
+				buttonTheme: {
+					fill: 'rgba(255,255,255,0.1)',
+					style: { color: '#ccc' },
+					states: { hover: { fill: 'var(--accent)' } }
+				}
+			},
+			navigator: {
+				enabled: true,
+				maskFill: 'rgba(79,195,247,0.2)',
+				handles: {
+					backgroundColor: 'var(--accent)',
+					borderColor: '#0f1115'
+				}
+			},
+			scrollbar: { enabled: false },
+			plotOptions: { series: { dataGrouping: { enabled: false } } },
+			credits: { enabled: false },
+			series: seriesData
+		});
+	}
 
-    const isDaily = folderType === 'daily';
-    const rangeButtons = isDaily ? [
-      { type: 'all', text: 'All' },
-      { type: 'year', count: 1, text: '1y' },
-      { type: 'ytd', text: 'YTD' },
-      { type: 'month', count: 6, text: '6m' },
-      { type: 'month', count: 3, text: '3m' },
-      { type: 'month', count: 1, text: '1m' },
-    ] : [
-      { type: 'all', text: 'All' },
-      { type: 'day', count: 7, text: '1w' },
-      { type: 'day', count: 3, text: '3d' },
-      { type: 'day', count: 1, text: '1d' },
-    ];
+	const makeSingleMetric = (title, key, type='line') => {
+	  // Collect all unique timestamps across all games
+	  const allTimestamps = [...new Set(
+		games.flatMap(g => g.history.map(h => parseDate(h.timestamp)))
+	  )].sort((a,b)=>a-b);
 
-    Highcharts.stockChart(div, {
-      chart: { type, backgroundColor: '#1e1e1e', zooming: { type: 'x' } },
-      title: { text: title, style: { color: '#fff' } },
-      xAxis: { type: 'datetime', labels: { style: { color: '#aaa' } } },
-      yAxis: { title: { text: title, style: { color: '#aaa' } }, labels: { style: { color: '#aaa' } }, gridLineColor: 'rgba(255,255,255,0.05)' },
-      legend: { itemStyle: { color: '#ddd' } },
-      rangeSelector: {
-        buttons: rangeButtons,
-        selected: 0,
-        inputEnabled: false,
-        buttonTheme: {
-          fill: 'rgba(255,255,255,0.1)',
-          style: { color: '#ccc' },
-          states: { hover: { fill: 'var(--accent)' } }
-        }
-      },
-      navigator: {
-        enabled: true,
-        maskFill: 'rgba(79,195,247,0.2)',
-        handles: { backgroundColor: 'var(--accent)', borderColor: '#0f1115' }
-      },
-      scrollbar: { enabled: false },
-	  plotOptions: {
-	    series: {
-		  connectNulls: type !== 'column', // line charts connect nulls, bars don't
-		  dataGrouping: { enabled: false },
-		  marker: {
-		    enabled: false,               // hide visible points
-		    states: { hover: { enabled: true, radius: 4 } } // only show on hover
-		  },
-		  lineWidth: type !== 'column' ? 2 : undefined, // make lines a bit bolder
-		  states: { hover: { lineWidthPlus: 0 } } // prevent thickness change on hover
-	    }
-	  },
-      credits: { enabled: false },
-      series: seriesData
-    });
-  }
+	  const series = games.map(g => {
+		const map = new Map(g.history.map(h => [parseDate(h.timestamp), h[key] ?? 0]));
+		const data = allTimestamps.map(ts => map.has(ts) ? [ts, map.get(ts)] : [ts, null]);
+		return { name: g.metadata.name, data, type };
+	  });
 
-  function makeSingleMetric(title, key, type='line'){
-    const allTimestamps = type === 'column' ? fullTimeline :
-      [...new Set(games.flatMap(g => g.history.map(h => parseDate(h.timestamp))))].sort((a,b)=>a-b);
+	  makeChart(title, series, type);
+	};
 
-    const series = games.map(g => {
-      const map = new Map(g.history.map(h => [parseDate(h.timestamp), h[key] ?? 0]));
-      const data = allTimestamps.map(ts => map.has(ts) ? [ts, map.get(ts)] : [ts, type === 'column' ? null : map.get(ts)]);
-      return { name: g.metadata.name, data, type };
-    });
 
-    makeChart(title, series, type);
-  }
-
-  // --- CHARTS ---
-  makeSingleMetric("Players","playing");
-  makeSingleMetric("Visits","visits");
-
-  // visit gain bar chart - use full timeline for visible gaps
-  makeChart("Visit Gain", games.map(g=>{
-    const map = new Map(g.history.map((h,i)=>[parseDate(h.timestamp), i>0 ? h.visits - g.history[i-1].visits : 0]));
-    const data = fullTimeline.map(ts => map.has(ts)? [ts, map.get(ts)] : [ts,null]);
-    return { name:g.metadata.name, data, type:'column' };
-  }), 'column');
-
-  makeSingleMetric("Favorites","favoritedCount");
-
-  // favorite gain with gaps
-  makeChart("Favorite Gain", games.map(g=>{
-    const map = new Map(g.history.map((h,i)=>[parseDate(h.timestamp), i>0 ? h.favoritedCount - g.history[i-1].favoritedCount : 0]));
-    const data = fullTimeline.map(ts => map.has(ts)? [ts, map.get(ts)] : [ts,null]);
-    return { name:g.metadata.name, data, type:'column' };
-  }), 'column');
-
-  // up/down total line chart
-  makeChart("Upvotes vs Downvotes", games.flatMap(g=>[
-    {name:`${g.metadata.name} - Upvotes`, color:'lime', data:g.history.map(h=>[parseDate(h.timestamp), h.upVotes??0])},
-    {name:`${g.metadata.name} - Downvotes`, color:'red', data:g.history.map(h=>[parseDate(h.timestamp), h.downVotes??0])}
-  ]));
-
-  // up/down gain bar chart with gaps
-  makeChart("Upvote/Downvote Gain", games.flatMap(g=>[
-    {
-      name:`${g.metadata.name} - Upvote Gain`, color:'lime',
-      data:fullTimeline.map(ts=>{
-        const idx=g.history.findIndex(h=>parseDate(h.timestamp)===ts);
-        if(idx<=0) return [ts,null];
-        return [ts,g.history[idx].upVotes - g.history[idx-1].upVotes];
-      })
-    },
-    {
-      name:`${g.metadata.name} - Downvote Gain`, color:'red',
-      data:fullTimeline.map(ts=>{
-        const idx=g.history.findIndex(h=>parseDate(h.timestamp)===ts);
-        if(idx<=0) return [ts,null];
-        return [ts,g.history[idx].downVotes - g.history[idx-1].downVotes];
-      })
-    }
-  ]), 'column');
-
-  makeSingleMetric("Upvote %","upVotePercentage");
+    makeSingleMetric("Players","playing");
+    makeSingleMetric("Visits","visits");
+    makeChart("Visit Gain", games.map(g=>({
+        name:g.metadata.name,
+        data:g.history.map((h,i)=> i>0 ? [parseDate(h.timestamp), h.visits - g.history[i-1].visits] : [parseDate(h.timestamp), 0]),
+        type:'column'
+    })), 'column');
+    makeSingleMetric("Favorites","favoritedCount");
+    makeChart("Favorite Gain", games.map(g=>({
+        name:g.metadata.name,
+        data:g.history.map((h,i)=> i>0 ? [parseDate(h.timestamp), h.favoritedCount - g.history[i-1].favoritedCount] : [parseDate(h.timestamp), 0]),
+        type:'column'
+    })), 'column');
+    makeChart("Upvotes vs Downvotes", games.flatMap(g=>[
+        {name:`${g.metadata.name} - Upvotes`, color:'lime', data:g.history.map(h=>[parseDate(h.timestamp), h.upVotes??0])},
+        {name:`${g.metadata.name} - Downvotes`, color:'red', data:g.history.map(h=>[parseDate(h.timestamp), h.downVotes??0])}
+    ]));
+    makeChart("Upvote/Downvote Gain", games.flatMap(g=>[
+        {name:`${g.metadata.name} - Upvote Gain`, color:'lime', data:g.history.map((h,i)=> i>0 ? [parseDate(h.timestamp), h.upVotes - g.history[i-1].upVotes] : [parseDate(h.timestamp), 0])},
+        {name:`${g.metadata.name} - Downvote Gain`, color:'red', data:g.history.map((h,i)=> i>0 ? [parseDate(h.timestamp), h.downVotes - g.history[i-1].downVotes] : [parseDate(h.timestamp), 0])}
+    ]), 'column');
+    makeSingleMetric("Upvote %","upVotePercentage");
 }
+
 
 // -------------------- BADGES --------------------
 async function showBadges(universeId){
