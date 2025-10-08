@@ -1,304 +1,534 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Game Tracker Home</title>
-  <link href="https://fonts.googleapis.com/css2?family=Roboto+Mono&display=swap" rel="stylesheet" />
-  <style>
-    body {
-      margin: 0;
-      font-family: 'Roboto Mono', monospace;
-      background-color: #121212;
-      color: #ddd;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      min-height: 100vh;
-      padding: 0;
-      user-select: none;
-    }
-    header {
-      position: sticky;
-      top: 0;
-      width: 100%;
-      z-index: 1000;
-      background-color: #121212;
-      border-bottom: 2px solid #333;
-      padding: 20px 0;
-      text-align: center;
-    }
-    header h1 {
-      margin: 0;
-      font-weight: 700;
-      font-size: 2rem;
-      color: #eee;
-      letter-spacing: 0.1em;
-    }
-    .button-container {
-      width: 100%;
-      max-width: 1200px;
-      text-align: center;
-      margin: 10px 0;
-      display: flex;
-      flex-wrap: wrap;
-      justify-content: center;
-      gap: 12px;
-      padding: 0 10px;
-    }
-    .button-container a {
-      display: inline-block;
-      padding: 10px 20px;
-      background-color: #222;
-      color: #ddd;
-      font-weight: 600;
-      font-size: 1rem;
-      border-radius: 4px;
-      text-decoration: none;
-      border: 1px solid #444;
-      transition: background-color 0.2s ease, border-color 0.2s ease;
-    }
-    .button-container a:hover {
-      background-color: #333;
-      border-color: #888;
-    }
-    .search-container {
-      margin: 20px 0 10px;
-      width: 90vw;
-      max-width: 600px;
-      text-align: center;
-    }
-    .search-container input {
-      width: 100%;
-      padding: 12px 16px;
-      font-size: 1rem;
-      border-radius: 6px;
-      border: 1px solid #444;
-      background-color: #1e1e1e;
-      color: #eee;
-    }
-    .search-container input::placeholder {
-      color: #888;
-    }
-
-    .container {
-      width: 90vw;
-      max-width: 1400px;
-      background: #1c1c1c;
-      border-radius: 6px;
-      padding: 20px;
-      box-sizing: border-box;
-      display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      gap: 20px;
-      user-select: text;
-    }
-    .game-item {
-      background: #2a2a2a;
-      border-radius: 6px;
-      padding: 15px 20px;
-      box-sizing: border-box;
-      border: 1px solid #333;
-      transition: box-shadow 0.2s ease;
-    }
-    .game-item:hover {
-      box-shadow: 0 0 10px #4caf50;
-    }
-    .game-item a {
-      color: #4caf50;
-      font-weight: 700;
-      font-size: 1.1rem;
-      text-decoration: none;
-      display: block;
-      margin-bottom: 8px;
-    }
-    .game-item a:hover {
-      color: #81c784;
-    }
-    .game-item p {
-      margin: 0 0 12px;
-      font-size: 0.85rem;
-      color: #bbb;
-      min-height: 3em;
-    }
-    .stats {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 8px;
-      font-size: 0.8rem;
-      color: #aaa;
-    }
-    .stat {
-      background: #222;
-      border-radius: 3px;
-      padding: 5px 8px;
-      font-weight: 600;
-      color: #ccc;
-      white-space: nowrap;
-    }
-    @media (max-width: 768px) {
-      .container {
-        width: 95vw;
-        grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
-      }
-      header h1 {
-        font-size: 1.5rem;
-      }
-    }
-  </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RTracker v6 — GlassDark</title>
+<script src="https://code.highcharts.com/stock/highstock.js"></script>
+<style>
+:root {
+  --bg-dark: #0f1115;
+  --bg-glass: rgba(255, 255, 255, 0.07);
+  --accent: #4fc3f7;
+  --accent-glow: rgba(79, 195, 247, 0.4);
+  --text-light: #f5f7fa;
+  --text-muted: #9aa0a6;
+  --shadow-inner: inset 2px 2px 5px rgba(0,0,0,0.4),
+                  inset -2px -2px 5px rgba(255,255,255,0.05);
+  --shadow-raised: 5px 5px 15px rgba(0,0,0,0.6),
+                   -3px -3px 10px rgba(255,255,255,0.05);
+}
+body {
+  font-family: "Inter", "Segoe UI", Arial, sans-serif;
+  background: radial-gradient(circle at top left, #121418, #0a0b0e);
+  margin: 0;
+  padding: 0;
+  color: var(--text-light);
+  backdrop-filter: blur(8px);
+  -webkit-font-smoothing: antialiased;
+  overflow-x: hidden;
+}
+header {
+  background: var(--bg-glass);
+  backdrop-filter: blur(10px);
+  color: white;
+  padding: 1.2rem;
+  text-align: center;
+  font-size: 0.9rem;
+  letter-spacing: 1px;
+  font-weight: 600;
+  border-bottom: 1px solid rgba(255,255,255,0.05);
+  box-shadow: var(--shadow-inner);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.container {
+  padding: 2rem;
+  max-width: 65%;
+  margin: 0 auto;
+}
+button {
+  padding: 0.5rem 1rem;
+  background: var(--bg-glass);
+  border: 1px solid rgba(255,255,255,0.1);
+  border-radius: 10px;
+  color: var(--text-light);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: var(--shadow-raised);
+  backdrop-filter: blur(5px);
+}
+button:hover {
+  background: var(--accent);
+  color: #0f1115;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.game-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.2rem;
+  justify-content: center;
+  margin-top: 1.5rem;
+}
+.game-card {
+  width: 240px;
+  padding: 1.2rem;
+  border-radius: 18px;
+  background: var(--bg-glass);
+  box-shadow: var(--shadow-raised);
+  backdrop-filter: blur(12px);
+  cursor: pointer;
+  position: relative;
+  transition: transform 0.15s ease, box-shadow 0.3s ease;
+}
+.game-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 0 20px var(--accent-glow);
+}
+.compare-checkbox {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  transform: scale(1.2);
+}
+.tabs {
+  display: flex;
+  gap: 1rem;
+  margin: 1rem 0;
+  justify-content: center;
+}
+.tab {
+  padding: 0.6rem 1.2rem;
+  border-radius: 12px;
+  background: var(--bg-glass);
+  cursor: pointer;
+  border: 1px solid rgba(255,255,255,0.05);
+  transition: all 0.2s ease;
+}
+.tab.active {
+  background: var(--accent);
+  color: #0f1115;
+  font-weight: 600;
+  box-shadow: 0 0 10px var(--accent-glow);
+}
+.tab:hover {
+  box-shadow: 0 0 8px var(--accent-glow);
+}
+.chart-container {
+  height: 480px;
+  margin-bottom: 2rem;
+  border-radius: 16px;
+  background: var(--bg-glass);
+  box-shadow: var(--shadow-inner);
+  overflow: hidden;
+}
+.info-panel {
+  background: var(--bg-glass);
+  border-radius: 16px;
+  padding: 1rem 1.5rem;
+  box-shadow: var(--shadow-inner);
+  margin-bottom: 1.5rem;
+}
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 0.8rem 1rem;
+}
+.info-item strong {
+  color: var(--accent);
+}
+.badge-card {
+  background: var(--bg-glass);
+  padding: 1rem;
+  border-radius: 14px;
+  box-shadow: var(--shadow-raised);
+  transition: all 0.15s ease-in-out;
+  width: 220px;
+  cursor: pointer;
+}
+.badge-card:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 0 12px var(--accent-glow);
+}
+.badge-grid {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 1.2rem;
+}
+.fade-in {
+  animation: fadeIn 0.4s ease;
+}
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(8px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+h2, h3, h4 {
+  font-weight: 500;
+  color: var(--text-light);
+  text-shadow: 0 0 8px rgba(255,255,255,0.05);
+}
+p {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+</style>
 </head>
 <body>
-  <header>
-    <h1>Minitracker</h1>
-    <div class="button-container">
-      <a href="index.html">Home</a>
-      <a href="https://discord.gg/YOUR_INVITE" target="_blank" rel="noopener">Discord</a>
-      <a href="./versions.html" target="_blank" rel="noopener">Version History</a>
-      <a href="/about.html" target="_blank" rel="noopener">About</a>
-    </div>
-  </header>
+<header>
+  <h1>RTracker Demo</h1>
+</header>
+<div class="container">
+  <div id="page"></div>
+</div>
 
-  <div class="search-container">
-    <input type="text" id="search" placeholder="Search games..." aria-label="Search games by name or description" />
-  </div>
+<script>
+const API_BASE = "http://localhost:8000";
+let compareSelection = [];
+const MAX_COMPARE = 5;
 
-  <div class="container" id="game-list" aria-label="List of games with stats">
-    
-    <div class="game-item" tabindex="0" data-name="steal a brainrot" data-description="stoopid">
-      <a href="6.html" title="View stats for Steal A Brainrot">Steal A Brainrot</a>
-      <p>stoopid</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">678,420 Players</div>
-        <div class="stat" title="Total likes">107,899,777 Likes</div>
-        <div class="stat" title="Total favorites">6,775,662 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="tower revolt" data-description="tds like game">
-      <a href="8.html" title="View stats for Tower Revolt">Tower Revolt</a>
-      <p>tds like game</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">1,068 Players</div>
-        <div class="stat" title="Total likes">1,211,190 Likes</div>
-        <div class="stat" title="Total favorites">723,469 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="anime leauge" data-description="yea">
-      <a href="11.html" title="View stats for Anime Leauge">Anime Leauge</a>
-      <p>yea</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">1,033 Players</div>
-        <div class="stat" title="Total likes">3,167,045 Likes</div>
-        <div class="stat" title="Total favorites">5,446,034 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="my game" data-description="description...">
-      <a href="4.html" title="View stats for My Game">My Game</a>
-      <p>Description...</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">635 Players</div>
-        <div class="stat" title="Total likes">192,115 Likes</div>
-        <div class="stat" title="Total favorites">29,909 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="game1" data-description="the first good game">
-      <a href="1.html" title="View stats for game1">game1</a>
-      <p>the first good game</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">632 Players</div>
-        <div class="stat" title="Total likes">256,100 Likes</div>
-        <div class="stat" title="Total favorites">51,109 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="game3" data-description="3">
-      <a href="3.html" title="View stats for game3">game3</a>
-      <p>3</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">403 Players</div>
-        <div class="stat" title="Total likes">100,319 Likes</div>
-        <div class="stat" title="Total favorites">64,475 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="game2" data-description="2">
-      <a href="2.html" title="View stats for game2">game2</a>
-      <p>2</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">354 Players</div>
-        <div class="stat" title="Total likes">187,903 Likes</div>
-        <div class="stat" title="Total favorites">32,110 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="a really good gaem" data-description="welcoem to good gaem!">
-      <a href="10.html" title="View stats for a really good gaem">a really good gaem</a>
-      <p>welcoem to good gaem!</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">139 Players</div>
-        <div class="stat" title="Total likes">18,071 Likes</div>
-        <div class="stat" title="Total favorites">4,570 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="5" data-description="5">
-      <a href="5.html" title="View stats for 5">5</a>
-      <p>5</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">63 Players</div>
-        <div class="stat" title="Total likes">10,834 Likes</div>
-        <div class="stat" title="Total favorites">1,588 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="game 9" data-description="9">
-      <a href="9.html" title="View stats for game 9">game 9</a>
-      <p>9</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">32 Players</div>
-        <div class="stat" title="Total likes">8,025 Likes</div>
-        <div class="stat" title="Total favorites">72,158 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="ug game" data-description="ug game :d">
-      <a href="12.html" title="View stats for ug game">ug game</a>
-      <p>ug game :D</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">11 Players</div>
-        <div class="stat" title="Total likes">70,497 Likes</div>
-        <div class="stat" title="Total favorites">12,262 Favorites</div>
-      </div>
-    </div>
-    
-    <div class="game-item" tabindex="0" data-name="test again" data-description="7">
-      <a href="7.html" title="View stats for test again">test again</a>
-      <p>7</p>
-      <div class="stats" aria-label="Game statistics">
-        <div class="stat" title="Currently playing">1 Players</div>
-        <div class="stat" title="Total likes">58,712 Likes</div>
-        <div class="stat" title="Total favorites">10,022 Favorites</div>
-      </div>
-    </div>
-    
-  </div>
+// UTILITIES
+async function fetchJSON(url){ const res = await fetch(url); return res.json(); }
 
-  <script>
-    const searchInput = document.getElementById("search");
-    const gameItems = document.querySelectorAll(".game-item");
+// -------------------- HOME --------------------
+async function showHomePage(folderType="normal"){
+    const data = await fetchJSON(`${API_BASE}/games`);
 
-    searchInput.addEventListener("input", function () {
-      const query = this.value.trim().toLowerCase();
-      gameItems.forEach(item => {
-        const name = item.getAttribute("data-name");
-        const desc = item.getAttribute("data-description");
-        const visible = name.includes(query) || desc.includes(query);
-        item.style.display = visible ? "block" : "none";
-      });
+    // Sort games by player count (descending)
+    data.games.sort((a, b) => (b.playing ?? 0) - (a.playing ?? 0));
+
+    const container = document.getElementById("page");
+    container.innerHTML = `
+      <div style="display:flex;align-items:center;gap:1rem; margin-bottom:1rem;">
+        <h2 style="margin:0; white-space:nowrap;">All Games (${folderType})</h2>
+        <input id="game-search" type="text" placeholder="Search games..." style="
+          flex:1;
+          padding: 0.5rem 1rem;
+          border-radius: 12px;
+          border: 1px solid rgba(255,255,255,0.2);
+          background: var(--bg-glass);
+          color: var(--text-light);
+          font-size: 0.9rem;
+          box-shadow: var(--shadow-raised);
+          backdrop-filter: blur(6px);
+        "/>
+        <button onclick="showComparePage('${folderType}')">Compare (${compareSelection.length})</button>
+      </div>
+      <div class="game-list"></div>
+    `;
+    const listDiv = container.querySelector(".game-list");
+
+    // Function to render game cards based on filter
+    function renderGames(filter=""){
+        listDiv.innerHTML = "";
+        data.games
+            .filter(game => game.name.toLowerCase().includes(filter.toLowerCase()))
+            .forEach(game=>{
+                const card = document.createElement("div");
+                card.className="game-card";
+                card.innerHTML=`
+                    <input type="checkbox" class="compare-checkbox" ${compareSelection.some(g=>g.id===game.universeId)?'checked':''}/>
+                    <h3>${game.name}</h3>
+                    <p>Playing: ${game.playing}</p>
+                    <p>Visits: ${game.visits}</p>
+                    <p>Favorites: ${game.favoritedCount}</p>
+                    <p>Upvote %: ${game.upVotePercentage}</p>
+                `;
+                const checkbox = card.querySelector(".compare-checkbox");
+                checkbox.addEventListener("click",(e)=>{
+                    e.stopPropagation();
+                    if(checkbox.checked){
+                        if(compareSelection.length>=MAX_COMPARE){ 
+                            alert("Max 5 games"); 
+                            checkbox.checked=false; 
+                            return; 
+                        }
+                        compareSelection.push({id:game.universeId, folder:folderType, name:game.name});
+                    } else {
+                        compareSelection = compareSelection.filter(g=>g.id!==game.universeId);
+                    }
+                    container.querySelector("button[onclick^='showComparePage']").innerText = `Compare (${compareSelection.length})`;
+                });
+                card.onclick = ()=>showGamePreview(game.universeId, folderType);
+                listDiv.appendChild(card);
+            });
+    }
+
+    // Initial render
+    renderGames();
+
+    // Add search functionality
+    const searchInput = document.getElementById("game-search");
+    searchInput.addEventListener("input", () => {
+        renderGames(searchInput.value);
     });
-  </script>
+}
+
+
+// -------------------- GAME PREVIEW --------------------
+async function showGamePreview(universeId, folderType="normal"){
+    const gameData = await fetchJSON(`${API_BASE}/games/${folderType}/${universeId}`);
+    const container = document.getElementById("page");
+    const m = gameData.metadata;
+
+    container.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button onclick="showHomePage('${folderType}')">Back</button>
+        <button onclick="toggleMode('${universeId}', '${folderType}')">Switch to ${folderType==='normal'?'Daily':'Normal'} Mode</button>
+      </div>
+      <h2>${m.name}</h2>
+      <p>${m.description?.replace(/\n/g, "<br>") || "No description."}</p>
+
+      <div class="info-panel">
+        <div class="info-grid">
+          <div class="info-item"><strong>Genre:</strong> ${m.genre || "Unknown"}</div>
+          <div class="info-item"><strong>Creator:</strong> ${m.creator.name}</div>
+          <div class="info-item"><strong>Creator Type:</strong> ${m.creator.type}</div>
+          <div class="info-item"><strong>Verified:</strong> ${m.creator.hasVerifiedBadge ? "✅" : "❌"}</div>
+          <div class="info-item"><strong>Created:</strong> ${new Date(m.created).toLocaleString()}</div>
+          <div class="info-item"><strong>Last Updated:</strong> ${new Date(m.updated).toLocaleString()}</div>
+          <div class="info-item"><strong>Max Players:</strong> ${m.maxPlayers}</div>
+          <div class="info-item"><strong>Avatar Type:</strong> ${m.universeAvatarType}</div>
+          <div class="info-item"><strong>Root Place ID:</strong> ${m.rootPlaceId}</div>
+          <div class="info-item"><strong>Price:</strong> ${m.price ?? "Free"}</div>
+          <div class="info-item"><strong>Copying Allowed:</strong> ${m.copyingAllowed ? "✅" : "❌"}</div>
+          <div class="info-item"><strong>Allowed Gear Genres:</strong> ${m.allowedGearGenres?.join(", ") || "None"}</div>
+        </div>
+      </div>
+
+      <div class="tabs">
+        <div class="tab active" data-tab="charts">Charts</div>
+        <div class="tab" data-tab="badges">Badges</div>
+      </div>
+      <div id="tab-content"></div>
+    `;
+    const tabs = container.querySelectorAll(".tab");
+    tabs.forEach(t=>t.onclick=()=>{
+        tabs.forEach(tb=>tb.classList.remove("active"));
+        t.classList.add("active");
+        if(t.dataset.tab==="charts") renderCharts([gameData], "tab-content");
+        else showBadges(universeId);
+    });
+    renderCharts([gameData], "tab-content");
+}
+
+function toggleMode(universeId, currentMode){
+    const newMode = currentMode==='normal'?'daily':'normal';
+    showGamePreview(universeId, newMode);
+}
+
+// -------------------- RENDER CHARTS --------------------
+function renderCharts(games, targetId="tab-content"){
+    const target = document.getElementById(targetId);
+    if(!target){ console.warn("Target element missing for charts"); return; }
+    target.innerHTML="";
+    if(!games.length || !games[0].history?.length){ target.innerHTML="<p>No history data available</p>"; return; }
+
+	function parseDate(ts) {
+	  const d = new Date(ts.replace(' ', 'T'));
+	  d.setSeconds(0, 0);
+	  const mins = d.getMinutes();
+	  const rounded = Math.floor(mins / 10) * 10;
+	  d.setMinutes(rounded);
+	  return d.getTime();
+	}
+
+	function makeChart(title, seriesData, type='line', folderType='normal'){
+		const div = document.createElement("div");
+		div.className = "chart-container";
+		target.appendChild(div);
+
+		// Define range selector buttons based on mode
+		const isDaily = folderType === 'daily';
+		const rangeButtons = isDaily ? [
+			{ type: 'all', text: 'All' },
+			{ type: 'year', count: 1, text: '1y' },
+			{ type: 'ytd', text: 'YTD' },
+			{ type: 'month', count: 6, text: '6m' },
+			{ type: 'month', count: 3, text: '3m' },
+			{ type: 'month', count: 1, text: '1m' },
+		] : [
+			{ type: 'all', text: 'All' },
+			{ type: 'day', count: 7, text: '1w' },
+			{ type: 'day', count: 3, text: '3d' },
+			{ type: 'day', count: 1, text: '1d' },
+		];
+
+		Highcharts.stockChart(div, {
+			chart: {
+				type: type,
+				backgroundColor: '#1e1e1e',
+				zooming: { type: 'x' },
+			},
+			title: { text: title, style: { color: '#fff' } },
+			xAxis: {
+				type: 'datetime',
+				labels: { style: { color: '#aaa' } },
+				crosshair: true // makes a vertical line follow the mouse
+			},
+			yAxis: {
+				title: { text: title, style: { color: '#aaa' } },
+				labels: { style: { color: '#aaa' } },
+				gridLineColor: 'rgba(255,255,255,0.05)'
+			},
+			legend: { itemStyle: { color: '#ddd' } },
+			tooltip: {
+				shared: true,      // show tooltip for all series at nearest X
+				split: false,      // single tooltip box
+				snap: 20,          // allow hovering near point
+				xDateFormat: '%Y-%m-%d %H:%M'
+			},
+			rangeSelector: {
+				buttons: rangeButtons,
+				selected: 0,
+				inputEnabled: false,
+				buttonTheme: {
+					fill: 'rgba(255,255,255,0.1)',
+					style: { color: '#ccc' },
+					states: { hover: { fill: 'var(--accent)' } }
+				}
+			},
+			navigator: {
+				enabled: true,
+				maskFill: 'rgba(79,195,247,0.2)',
+				handles: {
+					backgroundColor: 'var(--accent)',
+					borderColor: '#0f1115'
+				}
+			},
+			scrollbar: { enabled: false },
+			plotOptions: { series: { dataGrouping: { enabled: false } } },
+			credits: { enabled: false },
+			series: seriesData
+		});
+	}
+
+	const makeSingleMetric = (title, key, type='line') => {
+	  // Collect all unique timestamps across all games
+	  const allTimestamps = [...new Set(
+		games.flatMap(g => g.history.map(h => parseDate(h.timestamp)))
+	  )].sort((a,b)=>a-b);
+
+	  const series = games.map(g => {
+		const map = new Map(g.history.map(h => [parseDate(h.timestamp), h[key] ?? 0]));
+		const data = allTimestamps.map(ts => map.has(ts) ? [ts, map.get(ts)] : [ts, null]);
+		return { name: g.metadata.name, data, type };
+	  });
+
+	  makeChart(title, series, type);
+	};
+
+
+    makeSingleMetric("Players","playing");
+    makeSingleMetric("Visits","visits");
+    makeChart("Visit Gain", games.map(g=>({
+        name:g.metadata.name,
+        data:g.history.map((h,i)=> i>0 ? [parseDate(h.timestamp), h.visits - g.history[i-1].visits] : [parseDate(h.timestamp), 0]),
+        type:'column'
+    })), 'column');
+    makeSingleMetric("Favorites","favoritedCount");
+    makeChart("Favorite Gain", games.map(g=>({
+        name:g.metadata.name,
+        data:g.history.map((h,i)=> i>0 ? [parseDate(h.timestamp), h.favoritedCount - g.history[i-1].favoritedCount] : [parseDate(h.timestamp), 0]),
+        type:'column'
+    })), 'column');
+    makeChart("Upvotes vs Downvotes", games.flatMap(g=>[
+        {name:`${g.metadata.name} - Upvotes`, color:'lime', data:g.history.map(h=>[parseDate(h.timestamp), h.upVotes??0])},
+        {name:`${g.metadata.name} - Downvotes`, color:'red', data:g.history.map(h=>[parseDate(h.timestamp), h.downVotes??0])}
+    ]));
+    makeChart("Upvote/Downvote Gain", games.flatMap(g=>[
+        {name:`${g.metadata.name} - Upvote Gain`, color:'lime', data:g.history.map((h,i)=> i>0 ? [parseDate(h.timestamp), h.upVotes - g.history[i-1].upVotes] : [parseDate(h.timestamp), 0])},
+        {name:`${g.metadata.name} - Downvote Gain`, color:'red', data:g.history.map((h,i)=> i>0 ? [parseDate(h.timestamp), h.downVotes - g.history[i-1].downVotes] : [parseDate(h.timestamp), 0])}
+    ]), 'column');
+    makeSingleMetric("Upvote %","upVotePercentage");
+}
+
+
+// -------------------- BADGES --------------------
+async function showBadges(universeId){
+    const tabContent = document.getElementById("tab-content");
+    const data = await fetchJSON(`${API_BASE}/badges/${universeId}`);
+    tabContent.innerHTML="<div class='badge-grid'></div>";
+    const grid = tabContent.querySelector(".badge-grid");
+    const keys = Object.keys(data);
+    if(keys.length===0){ grid.innerHTML="<p>No badges for this game</p>"; return; }
+
+    keys.forEach(k=>{
+        const badge = data[k];
+        const card = document.createElement("div");
+        card.className="badge-card";
+        card.innerHTML=`
+            <h4>${badge.displayName}</h4>
+            <p>Awarded Count: ${badge.statistics.awardedCount?.[0]?.value ?? "N/A"}</p>
+            <p>Past Day: ${badge.statistics.pastDayAwardedCount?.[0]?.value ?? "N/A"}</p>
+            <p>Win Rate: ${((badge.statistics.winRatePercentage?.[0]?.value ?? 0)*100).toFixed(2)}%</p>
+        `;
+        card.onclick = ()=>showBadgePage(badge);
+        grid.appendChild(card);
+    });
+}
+
+function showBadgePage(badge){
+    const container = document.getElementById("page");
+    container.innerHTML = `
+      <button onclick="showHomePage()">Back</button>
+      <h2>${badge.displayName}</h2>
+      <p>${badge.displayDescription}</p>
+      <div id="badge-charts"></div>
+    `;
+    const stats = badge.statistics;
+    const chartDiv = document.getElementById("badge-charts");
+
+    function makeBadgeChart(title, arr, multiplier=1){
+        if(!arr || !arr.length) return;
+        const div = document.createElement("div");
+        div.className="chart-container";
+        chartDiv.appendChild(div);
+        Highcharts.chart(div,{
+            chart:{type:'line', backgroundColor:'#1e1e1e'},
+            title:{text:title, style:{color:'#fff'}},
+            xAxis:{categories:arr.map(a=>a.date), labels:{style:{color:'#aaa'}}},
+            yAxis:{title:{text:title, style:{color:'#aaa'}}, labels:{style:{color:'#aaa'}}},
+            legend:{itemStyle:{color:'#ddd'}},
+            series:[{name:title, data:arr.map(a=>(a.value??0)*multiplier)}]
+        });
+    }
+
+    makeBadgeChart("Awarded Count", stats.awardedCount);
+    makeBadgeChart("Past Day Awarded", stats.pastDayAwardedCount);
+    makeBadgeChart("Win Rate %", stats.winRatePercentage, 100);
+}
+
+// -------------------- COMPARE --------------------
+async function showComparePage(folderType){
+    if(compareSelection.length<2){ alert("Select at least 2 games to compare"); return; }
+    const games = [];
+    for(const g of compareSelection){
+        const gd = await fetchJSON(`${API_BASE}/games/${g.folder}/${g.id}`);
+        games.push(gd);
+    }
+    const container = document.getElementById("page");
+    container.innerHTML = `
+      <div style="display:flex;justify-content:space-between;align-items:center;">
+        <button onclick="showHomePage('${folderType}')">Back</button>
+        <button onclick="toggleCompareMode('${folderType}')">Switch to ${folderType==='normal'?'Daily':'Normal'} Mode</button>
+      </div>
+      <h2>Comparing ${games.map(g=>g.metadata.name).join(", ")}</h2>
+      <div id="compare-charts"></div>
+    `;
+    renderCharts(games, "compare-charts");
+}
+
+function toggleCompareMode(currentMode){
+    const newMode = currentMode==='normal'?'daily':'normal';
+    compareSelection = compareSelection.map(g=>({...g, folder:newMode}));
+    showComparePage(newMode);
+}
+
+// -------------------- INIT --------------------
+showHomePage();
+</script>
 </body>
 </html>
+
