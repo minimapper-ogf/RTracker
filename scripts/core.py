@@ -3,7 +3,7 @@ import sys
 from datetime import datetime
 from pathlib import Path
 
-localtesting = 1
+localtesting = 0
 ROOT = Path(__file__).resolve().parent
 LOCAL_DATA_ROOT = ROOT / 'data'
 DATA_ROOT = LOCAL_DATA_ROOT if localtesting else Path('/var/www/rtracker/data')

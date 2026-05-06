@@ -8,7 +8,7 @@ from urllib.parse import urlparse, unquote
 
 import requests
 
-localtesting = 1
+localtesting = 0
 ROOT = Path(__file__).resolve().parent.parent
 LOCAL_DATA_ROOT = ROOT / 'data'
 DATA_ROOT = LOCAL_DATA_ROOT if localtesting else Path('/var/www/rtracker/data')
