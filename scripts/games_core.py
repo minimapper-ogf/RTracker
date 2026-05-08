@@ -20,12 +20,30 @@ os.makedirs(DATA_DIR, exist_ok=True)
 os.makedirs(SITE_DIR, exist_ok=True)
 
 def get_next_aligned_time(now, interval_mins):
-    base_due = now + timedelta(minutes=interval_mins)
+    # Calculate the next occurrence based on fixed clock positions
     if interval_mins >= 1440: # Daily
-        return base_due.replace(hour=0, minute=0, second=0, microsecond=0)
-    if interval_mins >= 60: # Hourly
-        return base_due.replace(minute=0, second=0, microsecond=0)
-    return base_due.replace(minute=(base_due.minute // interval_mins) * interval_mins, second=0, microsecond=0)
+        target = now + timedelta(days=1)
+        return target.replace(hour=0, minute=0, second=0, microsecond=0)
+
+    if interval_mins >= 60: # Hourly or Multi-hour (e.g., 12h)
+        hours_to_add = interval_mins // 60
+        # Find next hour divisible by the interval (e.g., for 12h: 00:00 or 12:00)
+        current_hour = now.hour
+        next_hour = ((current_hour // hours_to_add) + 1) * hours_to_add
+
+        if next_hour >= 24:
+            target = now + timedelta(days=1)
+            return target.replace(hour=0, minute=0, second=0, microsecond=0)
+        return now.replace(hour=next_hour, minute=0, second=0, microsecond=0)
+
+    # Sub-hourly (10m, 30m)
+    minutes_to_add = interval_mins
+    next_minute = ((now.minute // minutes_to_add) + 1) * minutes_to_add
+
+    if next_minute >= 60:
+        target = now + timedelta(hours=1)
+        return target.replace(minute=0, second=0, microsecond=0)
+    return now.replace(minute=next_minute, second=0, microsecond=0)
 
 def get_resolution_info(universe_id):
     uid_str = str(universe_id)
@@ -48,10 +66,10 @@ def get_resolution_info(universe_id):
 
 def update_avg_daily_gain(game_folder):
     meta_path = os.path.join(game_folder, "metadata.json")
-    
+
     # Default to 5000 so new games start at 10m resolution
-    avg_gain = 5000 
-    
+    avg_gain = 5000
+
     # Prefer 1d.json for daily averages, but fall back to latest.json as needed.
     for file_name in ["1d.json", "latest.json"]:
         history_path = os.path.join(game_folder, file_name)
@@ -60,7 +78,7 @@ def update_avg_daily_gain(game_folder):
         try:
             with open(history_path, "r") as f:
                 history = json.load(f)
-            
+
             if len(history) >= 2:
                 sample_size = min(len(history), 7)
                 recent_data = history[-sample_size:]
@@ -80,7 +98,7 @@ def update_avg_daily_gain(game_folder):
             with open(meta_path, "w") as f:
                 json.dump(meta, f, indent=2)
         except: pass
-        
+
     return avg_gain
 
 def fetch_roblox_data(universe_ids):
@@ -120,7 +138,7 @@ def fetch_roblox_data(universe_ids):
                     "universeId": game['id'],
                     "full": game,
                     "votes": v_lookup.get(game['id'], {}),
-                    "favs": game.get("favoritedCount", 0) 
+                    "favs": game.get("favoritedCount", 0)
                 })
             time.sleep(0.5)
         except Exception as e:
@@ -162,86 +180,73 @@ def compute_1d_visit_gain(game_folder):
     return 0
 
 
-def save_game_data(item, res):
+def save_game_data(item, res, is_midnight=False):
     uid = str(item['universeId'])
     game_folder = os.path.join(DATA_DIR, uid)
     os.makedirs(game_folder, exist_ok=True)
 
-    # 1. Update Metadata (Includes static fav count in metadata too)
+    # 1. Update Metadata
     meta_path = os.path.join(game_folder, "metadata.json")
     metadata = item["full"]
-    
-    # Preserve the avg_daily_gain calculated earlier in the run
-    if os.path.exists(meta_path):
-        try:
-            with open(meta_path, "r") as f:
-                old_meta = json.load(f)
-                metadata["avg_daily_gain"] = old_meta.get("avg_daily_gain", 5000)
-        except:
-            metadata["avg_daily_gain"] = 5000
-    else:
-        metadata["avg_daily_gain"] = 5000
-
     metadata["favorites"] = item["favs"]
+
+    # Logic for new games: check if we have enough points for resolution switching
+    # (Existing avg_gain logic remains inside update_avg_daily_gain)
+    metadata["avg_daily_gain"] = update_avg_daily_gain(game_folder)
+
     with open(meta_path, "w") as f:
         json.dump(metadata, f, indent=2)
 
-    # 2. Prepare Data Point
+    # 2. Prepare Standard Data Point (Current Stats)
     up = item["votes"].get("upVotes", 0)
     down = item["votes"].get("downVotes", 0)
-    player_count = item["full"].get("playing", 0)
-
-    if res == "1d":
-        peak = get_peak_players(game_folder)
-        player_count = max(player_count, peak)
-
     new_entry = {
         "time": int(time.time()),
-        "players": player_count,
+        "players": item["full"].get("playing", 0),
         "visits": item["full"].get("visits", 0),
-        "favorites": item["favs"], # Save favorite count in history
+        "favorites": item["favs"],
         "likes": up,
         "dislikes": down,
         "ratio": round((up/(up+down)*100), 2) if (up+down) > 0 else 0
     }
 
-    # 3. Save history to the chosen resolution file
-    history_path = os.path.join(game_folder, f"{res}.json")
-    history_data = []
-    if os.path.exists(history_path):
-        try:
-            with open(history_path, "r") as f:
-                history_data = json.load(f)
-        except:
-            history_data = []
-
-    history_data.append(new_entry)
-    with open(history_path, "w") as f:
-        json.dump(history_data, f, indent=2)
-
-    if res != "1d":
-        latest_path = os.path.join(game_folder, "latest.json")
-        latest_data = []
-        if os.path.exists(latest_path):
+    # 3. Save to Resolution File & Latest (Always maintain latest for the UI)
+    for target_file in [f"{res}.json", "latest.json"]:
+        if target_file == "1d.json": continue # Skip 1d here, we handle it below
+        path = os.path.join(game_folder, target_file)
+        data = []
+        if os.path.exists(path):
             try:
-                with open(latest_path, "r") as f:
-                    latest_data = json.load(f)
-            except:
-                latest_data = []
-        latest_data.append(new_entry)
-        cutoff = int(time.time()) - 7 * 86400
-        latest_data = [point for point in latest_data if point.get("time", 0) >= cutoff]
-        with open(latest_path, "w") as f:
-            json.dump(latest_data, f, indent=2)
-    else:
-        latest_path = os.path.join(game_folder, "latest.json")
-        if os.path.exists(latest_path):
+                with open(path, "r") as f: data = json.load(f)
+            except: data = []
+
+        data.append(new_entry)
+        # Keep latest.json trimmed to 7 days
+        if target_file == "latest.json":
+            cutoff = int(time.time()) - 7 * 86400
+            data = [p for p in data if p.get("time", 0) >= cutoff]
+
+        with open(path, "w") as f:
+            json.dump(data, f, indent=2)
+
+    # 4. Handle Midnight / 1d Logic (Recording Daily Peak)
+    if is_midnight or res == "1d":
+        daily_path = os.path.join(game_folder, "1d.json")
+        daily_data = []
+        if os.path.exists(daily_path):
             try:
-                os.remove(latest_path)
-            except:
-                pass
-    with open(meta_path, "w") as f:
-        json.dump(metadata, f, indent=2)
+                with open(daily_path, "r") as f: daily_data = json.load(f)
+            except: daily_data = []
+
+        # Look back through all high-res files to find the true peak players
+        true_peak = get_peak_players(game_folder)
+
+        daily_entry = new_entry.copy()
+        daily_entry["players"] = max(new_entry["players"], true_peak)
+
+        daily_data.append(daily_entry)
+        with open(daily_path, "w") as f:
+            json.dump(daily_data, f, indent=2)
 
 def rebuild_frontend_index():
     """Compiles the most recent data for all games into one sortable file."""
@@ -324,16 +329,36 @@ def main():
             master_list = json.load(f)
 
     now = datetime.now()
-    due_ids = []
+    is_midnight = (now.hour == 0 and now.minute < 15)
 
+    due_ids = []
     for uid in universe_ids:
         uid_str = str(uid)
+
+        game_folder = os.path.join(DATA_DIR, uid_str)
+        latest_path = os.path.join(game_folder, "latest.json")
+
+        point_count = 0
+        if os.path.exists(latest_path):
+            try:
+                with open(latest_path, "r") as f:
+                    data = json.load(f)
+                    point_count = len(data) if isinstance(data, list) else 0
+            except: pass
+
         if uid_str not in master_list:
             due_ids.append(uid)
         else:
-            next_fetch = datetime.strptime(master_list[uid_str]["next_fetch"], "%Y-%m-%d %H:%M:%S")
-            if next_fetch <= now:
+            if point_count < 5:
+                next_fetch = datetime.strptime(master_list[uid_str]["next_fetch"], "%Y-%m-%d %H:%M:%S")
+                if next_fetch <= now:
+                    due_ids.append(uid)
+            elif is_midnight:
                 due_ids.append(uid)
+            else:
+                next_fetch = datetime.strptime(master_list[uid_str]["next_fetch"], "%Y-%m-%d %H:%M:%S")
+                if next_fetch <= now:
+                    due_ids.append(uid)
 
     if not due_ids:
         print("Status: All games up to date.")
@@ -344,9 +369,26 @@ def main():
 
     for item in results:
         uid_str = str(item["universeId"])
-        res, interval = get_resolution_info(uid_str)
-        save_game_data(item, res)
 
+        game_folder = os.path.join(DATA_DIR, uid_str)
+        latest_path = os.path.join(game_folder, "latest.json")
+
+        point_count = 0
+        if os.path.exists(latest_path):
+            try:
+                with open(latest_path, "r") as f:
+                    data = json.load(f)
+                    point_count = len(data) if isinstance(data, list) else 0
+            except: pass
+
+        if point_count < 5:
+            res, interval = "10m", 10
+        else:
+            res, interval = get_resolution_info(uid_str)
+
+        save_game_data(item, res, is_midnight=is_midnight)
+
+        # Schedule next run
         next_run = get_next_aligned_time(now, interval)
         master_list[uid_str] = {
             "name": item["full"].get("name", "Unknown"),
@@ -359,7 +401,6 @@ def main():
         json.dump(master_list, f, indent=2)
 
     print("Success: Master list updated.")
-
     rebuild_frontend_index()
 if __name__ == "__main__":
     main()
