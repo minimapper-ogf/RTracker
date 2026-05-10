@@ -329,7 +329,7 @@ def main():
             master_list = json.load(f)
 
     now = datetime.now()
-    is_midnight = (now.hour == 0 and now.minute < 15)
+    is_midnight = (now.hour == 0 and now.minute < 5)
 
     due_ids = []
     for uid in universe_ids:
