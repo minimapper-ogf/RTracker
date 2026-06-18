@@ -163,7 +163,8 @@ def get_peak_players(game_folder):
 
 
 def compute_1d_visit_gain(game_folder):
-    for file_name in ["1d.json", "latest.json"]:
+    # Check latest.json first since it has high-resolution recent data, fall back to 1d.json
+    for file_name in ["latest.json", "1d.json"]:
         history_path = os.path.join(game_folder, file_name)
         if not os.path.exists(history_path):
             continue
@@ -171,12 +172,31 @@ def compute_1d_visit_gain(game_folder):
             with open(history_path, "r") as f:
                 history = json.load(f)
             if not isinstance(history, list) or len(history) < 2:
-                return 0
-            first = history[0].get("visits", 0)
-            last = history[-1].get("visits", 0)
-            return max(0, last - first)
+                continue
+
+            last_point = history[-1]
+            last_time = last_point.get("time", 0)
+            last_visits = last_point.get("visits", 0)
+
+            # Target timestamp exactly 24 hours before the latest point
+            target_time = last_time - 86400
+
+            # Find the point closest to target_time
+            closest_point = None
+            smallest_delta = float('inf')
+
+            for point in history:
+                p_time = point.get("time", 0)
+                delta = abs(p_time - target_time)
+                if delta < smallest_delta:
+                    smallest_delta = delta
+                    closest_point = point
+
+            # Ensure we found a valid historical data point to compare against
+            if closest_point and closest_point != last_point:
+                return max(0, last_visits - closest_point.get("visits", 0))
         except:
-            return 0
+            continue
     return 0
 
 
@@ -301,10 +321,7 @@ def rebuild_frontend_index():
                             })
                             break
                     except: pass
-                if entry["v24"] == 0:
-                    v24_path = os.path.join(DATA_DIR, uid, "1d.json")
-                    if os.path.exists(v24_path):
-                        entry["v24"] = compute_1d_visit_gain(os.path.join(DATA_DIR, uid))
+                entry["v24"] = compute_1d_visit_gain(os.path.join(DATA_DIR, uid))
                 all_games_data.append(entry)
             except: pass
 
