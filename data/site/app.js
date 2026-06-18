@@ -646,12 +646,17 @@ async function renderGamePage(gameId) {
   const favGain = points.map((point, index) => index === 0 ? 0 : Math.max(0, (point.favorites || 0) - (points[index - 1].favorites || 0)));
 
   const normalizeGain = (values, points) => values.map((value, index) => {
-    if (index === 0) return 0;
-    const delta = points[index].time - points[index - 1].time;
-    if (delta <= 600) return value;
-    const divisor = delta / 600;
-    return Math.round(value / divisor);
+      if (index === 0) return 0;
+
+      // If the tracker is in daily history mode, return the raw daily gain value directly
+      if (state.gameHistoryMode === 'daily') return value;
+
+      const delta = points[index].time - points[index - 1].time;
+      if (delta <= 600) return value;
+      const divisor = delta / 600;
+      return Math.round(value / divisor);
   });
+
   const visitGainNorm = normalizeGain(visitGain, points);
   const likesGainNorm = normalizeGain(likesGain, points);
   const dislikesGainNorm = normalizeGain(dislikesGain, points);
