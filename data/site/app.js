@@ -248,7 +248,7 @@ function formatNumber(value) {
 
 function formatPercent(value) {
   if (typeof value !== 'number' || Number.isNaN(value)) return '-';
-  return `${value.toFixed(2)}%`;
+  return `${value.toFixed(4)}%`;
 }
 
 function formatTime(timestamp, options = {}) {
