@@ -227,7 +227,7 @@ def save_game_data(item, res, is_midnight=False):
         "favorites": item["favs"],
         "likes": up,
         "dislikes": down,
-        "ratio": round((up/(up+down)*100), 2) if (up+down) > 0 else 0
+        "ratio": round((up/(up+down)*100), 4) if (up+down) > 0 else 0
     }
 
     # 3. Save to Resolution File & Latest (Always maintain latest for the UI)
