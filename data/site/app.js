@@ -11,6 +11,7 @@ const state = {
     addPreview: null,
     addError: null,
     addStatus: 'idle'
+    currentPage: 1
 };
 const colors = ['#5f9cff', '#56d0a3', '#ff9f5e', '#ff6b88'];
 const app = document.getElementById('app');
@@ -321,6 +322,7 @@ function buildSortButton(field, label) {
 }
 
 window.__appSort = field => {
+    state.currentPage = 1;
     if (state.indexSort.key === field) {
         state.indexSort.dir *= -1;
     } else {
@@ -331,10 +333,18 @@ window.__appSort = field => {
 };
 
 window.__setIndexTab = tab => {
+    state.currentPage = 1;
     if (state.indexTab === tab) return;
     state.indexTab = tab;
     state.indexSort = tab === 'groups' ? { key: 'm', dir: -1 } : { key: 'v', dir: -1 };
     navigate(tab === 'groups' ? '/groups' : '/');
+};
+
+window.__setPage = pageNum => {
+    state.currentPage = pageNum;
+    renderIndexPage();
+    // Smooth scroll back to top of index table when flipping pages
+    window.scrollTo({ top: 0, behavior: 'smooth' });
 };
 
 function getIndexSortLabel() {
@@ -368,16 +378,41 @@ function renderIndexPage() {
     const countLabel = isGroups ? 'groups' : 'games';
     const title = isGroups ? 'Group Index' : 'Game Index';
     const emptyMessage = isGroups ? 'No groups found.' : 'No games found.';
+
+    // Pagination parameters
+    const itemsPerPage = 100;
+    const totalItems = sorted.length;
+    const totalPages = Math.max(1, Math.ceil(totalItems / itemsPerPage));
+
+    // Bounds check to ensure page isn't out of range
+    if (state.currentPage > totalPages) state.currentPage = totalPages;
+    if (state.currentPage < 1) state.currentPage = 1;
+
+    const startIndex = (state.currentPage - 1) * itemsPerPage;
+    const endIndex = startIndex + itemsPerPage;
+    const paginatedItems = sorted.slice(startIndex, endIndex);
+
     const sortButtons = isGroups
     ? `${buildSortButton('m', 'Members')} ${buildSortButton('gc', 'Games')} ${buildSortButton('p', 'Players')} ${buildSortButton('v', 'Visits')}`
     : `${buildSortButton('p', 'Players')} ${buildSortButton('v', 'Visits')} ${buildSortButton('v24', '24h Visits')} ${buildSortButton('l', 'Likes')} ${buildSortButton('d', 'Dislikes')} ${buildSortButton('f', 'Favorites')} ${buildSortButton('r', 'Like %')}`;
+
+    // Build standard pagination UI HTML string
+    let paginationHtml = '';
+    if (totalPages > 1) {
+        paginationHtml = `
+        <div class="pagination-row" style="display: flex; justify-content: center; align-items: center; gap: 12px; margin-top: 20px; padding: 10px;">
+        <button type="button" ${state.currentPage === 1 ? 'disabled style="opacity: 0.4; cursor: not-allowed;"' : ''} onclick="window.__setPage(${state.currentPage - 1})">← Previous</button>
+        <span class="small-note" style="color: #dbe5ff;">Page <strong>${state.currentPage}</strong> of ${totalPages}</span>
+        <button type="button" ${state.currentPage === totalPages ? 'disabled style="opacity: 0.4; cursor: not-allowed;"' : ''} onclick="window.__setPage(${state.currentPage + 1})">Next →</button>
+        </div>`;
+    }
 
     app.innerHTML = `
     <section class="panel hero-panel">
     <div class="control-row">
     <div>
     <h1>${title}</h1>
-    <p class="small-note">Sorted by ${getIndexSortLabel()}.</p>
+    <p class="small-note">Sorted by ${getIndexSortLabel()}. Showing ${startIndex + 1}-${Math.min(endIndex, totalItems)} of ${totalItems}.</p>
     </div>
     <input id="searchInput" type="search" placeholder="Filter ${countLabel} by name..." value="${escapeHtml(state.searchQuery)}" />
     </div>
@@ -386,12 +421,12 @@ function renderIndexPage() {
     <button class="${state.indexTab === 'groups' ? 'active' : ''}" onclick="window.__setIndexTab('groups')">Groups</button>
     </div>
     <div class="control-row">
-    <div class="badge-pill">${sorted.length} ${countLabel}</div>
+    <div class="badge-pill">${totalItems} ${countLabel}</div>
     <div>${sortButtons}</div>
     </div>
     </section>
     <section class="panel table-shell">
-    ${sorted.length ? `
+    ${paginatedItems.length ? `
         <table>
         <thead>
         ${isGroups ? `
@@ -416,7 +451,7 @@ function renderIndexPage() {
             `}
             </thead>
             <tbody>
-            ${sorted.map(item => isGroups ? `
+            ${paginatedItems.map(item => isGroups ? `
                 <tr>
                 <td><a data-nav="true" href="${getResourcePath(`groups/${item.id}/`)}">${escapeHtml(item.n)}</a></td>
                 <td>${formatNumber(item.m)}</td>
@@ -438,13 +473,23 @@ function renderIndexPage() {
                 `).join('')}
                 </tbody>
                 </table>
+                ${paginationHtml}
                 ` : `<p class="small-note">${emptyMessage}</p>`}
                 </section>
                 `;
-                document.getElementById('searchInput').addEventListener('input', event => {
+
+                const searchInput = document.getElementById('searchInput');
+                searchInput.addEventListener('input', event => {
                     state.searchQuery = event.target.value;
+                    state.currentPage = 1; // Reset to page 1 on search filter change
                     renderIndexPage();
                 });
+
+                // Maintain cursor focus at the end of input text across re-renders
+                if (document.activeElement?.id !== 'searchInput') {
+                    searchInput.focus();
+                    searchInput.setSelectionRange(searchInput.value.length, searchInput.value.length);
+                }
 }
 
 function escapeHtml(value) {
