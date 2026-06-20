@@ -54,14 +54,14 @@ def get_resolution_info(universe_id):
     avg_gain = update_avg_daily_gain(game_folder)
 
     # 2. Threshold logic
-    if avg_gain < 10:
+    if avg_gain < 50:
         return "1d", 1440
-    if avg_gain < 100:
+    if avg_gain < 1000:
         return "1h", 60
-    if avg_gain < 500:
+    if avg_gain < 10000:
         return "30m", 30
 
-    # Default for new games (avg_gain 5000+) or high performers
+    # Default for new games (avg_gain 10000+) or high performers
     return "10m", 10
 
 def update_avg_daily_gain(game_folder):
