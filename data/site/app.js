@@ -1233,7 +1233,7 @@ const state = {
     addId: '',
     addPreview: null,
     addError: null,
-    addStatus: 'idle'
+    addStatus: 'idle',
     currentPage: 1
 };
 const colors = ['#5f9cff', '#56d0a3', '#ff9f5e', '#ff6b88'];
