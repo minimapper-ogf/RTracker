@@ -227,7 +227,7 @@ tbody tr:hover {
 }
 .chart-frame {
   width: 100%;
-  min-height: 240px;
+  min-height: 340px;
   padding: 14px;
   border-radius: 8px;
   background: rgba(13, 18, 32, 0.98);
@@ -237,7 +237,7 @@ tbody tr:hover {
 }
 .chart-canvas {
   width: 100%;
-  height: 220px;
+  height: 300px;
 }
 .chart-panel h2 {
   margin: 0 0 6px;
